@@ -17,7 +17,8 @@
     <p class="page-intro">Complete real-life actions to earn XP and level up.</p>
 
     <form id="add-quest-form" class="add-quest-form">
-      <h2>Add a quest</h2>
+      <h2 id="quest-form-title">Add a quest</h2>
+      <input type="hidden" id="editing-quest-id" value="" />
 
       <label class="field">
         <span>Category</span>
@@ -39,7 +40,10 @@
         <input type="number" id="quest-xp" value="30" min="1" max="200" />
       </label>
 
-      <button type="submit" class="create-btn">Add quest</button>
+      <div class="quest-form-actions">
+        <button type="submit" id="quest-submit-btn" class="create-btn">Add quest</button>
+        <button type="button" id="quest-cancel-btn" class="quest-cancel-btn hidden">Cancel</button>
+      </div>
       <p id="add-quest-error" class="error hidden"></p>
     </form>
 

@@ -273,6 +273,47 @@ h2 {
   margin-top: 0.25rem;
 }
 
+.quest-form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.quest-cancel-btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #b8c5be;
+  border-radius: 10px;
+  background: #fff;
+  color: #1f2a24;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.quest-cancel-btn:hover {
+  background: #f3f6f4;
+}
+
+.quest-cancel-btn.hidden {
+  display: none;
+}
+
+.quest-edit-btn {
+  padding: 0.35rem 0.55rem;
+  border: none;
+  background: transparent;
+  color: #3b6ea5;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.quest-edit-btn:hover {
+  color: #2a5280;
+}
+
 .quest-tag {
   display: inline-block;
   margin-right: 0.45rem;

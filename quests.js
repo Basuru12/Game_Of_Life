@@ -66,7 +66,10 @@ function startQuestsPage() {
 
   document
     .getElementById("add-quest-form")
-    .addEventListener("submit", handleAddQuest);
+    .addEventListener("submit", handleQuestFormSubmit);
+  document
+    .getElementById("quest-cancel-btn")
+    .addEventListener("click", clearQuestForm);
 }
 
 function fillCategorySelect() {
@@ -81,9 +84,40 @@ function fillCategorySelect() {
   });
 }
 
-function handleAddQuest(event) {
+function clearQuestForm() {
+  document.getElementById("editing-quest-id").value = "";
+  document.getElementById("quest-form-title").textContent = "Add a quest";
+  document.getElementById("quest-submit-btn").textContent = "Add quest";
+  document.getElementById("quest-cancel-btn").classList.add("hidden");
+  document.getElementById("quest-title").value = "";
+  document.getElementById("quest-description").value = "";
+  document.getElementById("quest-xp").value = "30";
+  document.getElementById("quest-category").selectedIndex = 0;
+  document.getElementById("add-quest-error").classList.add("hidden");
+}
+
+function startEditQuest(questId) {
+  const quest = loadCustomQuests().find((item) => item.id === questId);
+  if (!quest) return;
+
+  document.getElementById("editing-quest-id").value = quest.id;
+  document.getElementById("quest-form-title").textContent = "Edit quest";
+  document.getElementById("quest-submit-btn").textContent = "Save changes";
+  document.getElementById("quest-cancel-btn").classList.remove("hidden");
+  document.getElementById("quest-category").value = quest.category;
+  document.getElementById("quest-title").value = quest.title;
+  document.getElementById("quest-description").value = quest.description;
+  document.getElementById("quest-xp").value = String(quest.xp);
+  document.getElementById("add-quest-error").classList.add("hidden");
+
+  document.getElementById("add-quest-form").scrollIntoView({ behavior: "smooth" });
+  document.getElementById("quest-title").focus();
+}
+
+function handleQuestFormSubmit(event) {
   event.preventDefault();
 
+  const editingId = document.getElementById("editing-quest-id").value;
   const categoryId = document.getElementById("quest-category").value;
   const title = document.getElementById("quest-title").value.trim();
   const description = document.getElementById("quest-description").value.trim();
@@ -103,23 +137,37 @@ function handleAddQuest(event) {
   }
 
   const xp = Number.isFinite(xpInput) && xpInput > 0 ? xpInput : 30;
-
   const custom = loadCustomQuests();
-  custom.push({
-    id: "custom-" + Date.now(),
-    category: categoryId,
-    title: title,
-    description: description || "Custom quest",
-    xp: xp,
-    custom: true,
-  });
+
+  if (editingId) {
+    const index = custom.findIndex((quest) => quest.id === editingId);
+    if (index === -1) {
+      errorEl.textContent = "That quest could not be found.";
+      errorEl.classList.remove("hidden");
+      return;
+    }
+
+    custom[index] = {
+      id: editingId,
+      category: categoryId,
+      title: title,
+      description: description || "Custom quest",
+      xp: xp,
+      custom: true,
+    };
+  } else {
+    custom.push({
+      id: "custom-" + Date.now(),
+      category: categoryId,
+      title: title,
+      description: description || "Custom quest",
+      xp: xp,
+      custom: true,
+    });
+  }
+
   saveCustomQuests(custom);
-
-  errorEl.classList.add("hidden");
-  document.getElementById("quest-title").value = "";
-  document.getElementById("quest-description").value = "";
-  document.getElementById("quest-xp").value = "30";
-
+  clearQuestForm();
   renderQuests();
 }
 
@@ -130,6 +178,10 @@ function removeCustomQuest(questId) {
   if (doneQuests[questId]) {
     delete doneQuests[questId];
     saveDoneQuests(doneQuests);
+  }
+
+  if (document.getElementById("editing-quest-id").value === questId) {
+    clearQuestForm();
   }
 
   renderQuests();
@@ -211,6 +263,13 @@ function makeQuestRow(quest) {
   actions.appendChild(btn);
 
   if (quest.custom) {
+    const editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.className = "quest-edit-btn";
+    editBtn.textContent = "Edit";
+    editBtn.addEventListener("click", () => startEditQuest(quest.id));
+    actions.appendChild(editBtn);
+
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
     removeBtn.className = "quest-remove-btn";
