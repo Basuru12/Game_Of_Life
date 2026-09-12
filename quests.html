@@ -10,8 +10,38 @@
   <main class="app">
     <header id="player-header" class="player-header"></header>
 
-    <h1>Quests</h1>
+    <header class="quests-page-header">
+      <h1>Quests</h1>
+    </header>
+
     <p class="page-intro">Complete real-life actions to earn XP and level up.</p>
+
+    <form id="add-quest-form" class="add-quest-form">
+      <h2>Add a quest</h2>
+
+      <label class="field">
+        <span>Category</span>
+        <select id="quest-category"></select>
+      </label>
+
+      <label class="field">
+        <span>Title</span>
+        <input type="text" id="quest-title" placeholder="What will you do?" maxlength="80" />
+      </label>
+
+      <label class="field">
+        <span>Description</span>
+        <input type="text" id="quest-description" placeholder="Optional details" maxlength="140" />
+      </label>
+
+      <label class="field">
+        <span>XP</span>
+        <input type="number" id="quest-xp" value="30" min="1" max="200" />
+      </label>
+
+      <button type="submit" class="create-btn">Add quest</button>
+      <p id="add-quest-error" class="error hidden"></p>
+    </form>
 
     <section id="quest-list" class="quest-list"></section>
 
