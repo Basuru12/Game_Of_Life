@@ -136,7 +136,9 @@ function handleQuestFormSubmit(event) {
     return;
   }
 
-  const xp = Number.isFinite(xpInput) && xpInput > 0 ? xpInput : 30;
+  let xp = Number.isFinite(xpInput) && xpInput > 0 ? xpInput : 30;
+  if (xp > 120) xp = 120;
+  if (xp < 1) xp = 1;
   const custom = loadCustomQuests();
 
   if (editingId) {

@@ -72,16 +72,37 @@ function makeNewAvatar() {
 }
 
 // --- Level / XP ---
+// Budget: ~100 full paths (~340 XP each) ≈ 34k XP to reach level 50.
+// Early levels are cheap; later levels cost more (linear ramp).
+const MAX_LEVEL = 50;
+const FULL_PATH_XP = 340;
+const PATHS_TO_MAX = 100;
+
 function xpToNextLevel(level) {
-  return level * 100;
+  // Level 1→2: 120 XP; each next level +24. Totals ~34,104 XP ≈ 100 paths.
+  return 120 + (level - 1) * 24;
 }
 
 function gainXp(avatar, amount) {
+  if (avatar.level >= MAX_LEVEL) {
+    avatar.level = MAX_LEVEL;
+    avatar.xp = 0;
+    return;
+  }
+
   avatar.xp += amount;
 
-  while (avatar.xp >= xpToNextLevel(avatar.level)) {
+  while (
+    avatar.level < MAX_LEVEL &&
+    avatar.xp >= xpToNextLevel(avatar.level)
+  ) {
     avatar.xp -= xpToNextLevel(avatar.level);
     avatar.level += 1;
+  }
+
+  if (avatar.level >= MAX_LEVEL) {
+    avatar.level = MAX_LEVEL;
+    avatar.xp = 0;
   }
 }
 
