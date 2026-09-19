@@ -14,10 +14,10 @@
       <h1>Quests</h1>
     </header>
 
-    <p class="page-intro">Complete real-life actions to earn XP and level up.</p>
+    <p class="page-intro">Build quest paths with steps. Completing a step earns XP.</p>
 
     <form id="add-quest-form" class="add-quest-form">
-      <h2 id="quest-form-title">Add a quest</h2>
+      <h2 id="quest-form-title">Add a quest path</h2>
       <input type="hidden" id="editing-quest-id" value="" />
 
       <label class="field">
@@ -26,22 +26,23 @@
       </label>
 
       <label class="field">
-        <span>Title</span>
-        <input type="text" id="quest-title" placeholder="What will you do?" maxlength="80" />
+        <span>Path title</span>
+        <input type="text" id="quest-title" placeholder="e.g. Celtic Fiddle Path" maxlength="80" />
       </label>
 
       <label class="field">
         <span>Description</span>
-        <input type="text" id="quest-description" placeholder="Optional details" maxlength="140" />
+        <input type="text" id="quest-description" placeholder="Optional path summary" maxlength="140" />
       </label>
 
-      <label class="field">
-        <span>XP</span>
-        <input type="number" id="quest-xp" value="30" min="1" max="120" />
-      </label>
+      <div class="field">
+        <span>Steps (XP comes from these)</span>
+        <div id="steps-builder" class="steps-builder"></div>
+        <button type="button" id="add-step-btn" class="add-step-btn">Add step</button>
+      </div>
 
       <div class="quest-form-actions">
-        <button type="submit" id="quest-submit-btn" class="create-btn">Add quest</button>
+        <button type="submit" id="quest-submit-btn" class="create-btn">Add path</button>
         <button type="button" id="quest-cancel-btn" class="quest-cancel-btn hidden">Cancel</button>
       </div>
       <p id="add-quest-error" class="error hidden"></p>

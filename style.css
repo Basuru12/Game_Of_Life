@@ -414,8 +414,163 @@ h2 {
 .quest-category-list {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 1.25rem;
   padding-left: 0.15rem;
+}
+
+.category-empty {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #7a8a82;
+}
+
+.path-card {
+  padding-bottom: 0.5rem;
+}
+
+.path-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.path-progress {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #3d5a4c;
+}
+
+.path-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-left: 0.75rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid #d0ddd6;
+}
+
+.step-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.4rem 0;
+}
+
+.step-row.step-done {
+  opacity: 0.55;
+}
+
+.step-row.step-locked {
+  opacity: 0.45;
+}
+
+.step-row.step-boss .step-label {
+  color: #8b6914;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.step-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.step-label {
+  margin: 0 0 0.15rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #5a6b63;
+}
+
+.step-title {
+  margin: 0 0 0.2rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1f2a24;
+  line-height: 1.35;
+}
+
+.steps-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.step-form-row {
+  display: grid;
+  grid-template-columns: auto 1fr 4.5rem auto auto;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.step-form-row.step-dragging {
+  opacity: 0.5;
+}
+
+.step-form-row.step-drag-over {
+  outline: 1px dashed #3d7a62;
+  outline-offset: 2px;
+}
+
+.step-drag-handle {
+  padding: 0.35rem 0.4rem;
+  border: 1px solid #d0ddd6;
+  border-radius: 6px;
+  background: #f7faf8;
+  color: #5a6b63;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: grab;
+  user-select: none;
+}
+
+.step-drag-handle:active {
+  cursor: grabbing;
+}
+
+.step-form-row input[type="text"],
+.step-form-row input[type="number"] {
+  padding: 0.5rem 0.55rem;
+  border: 1px solid #b8c5be;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: #fff;
+  width: 100%;
+}
+
+.step-boss-label {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.step-remove-row-btn,
+.add-step-btn {
+  padding: 0.45rem 0.65rem;
+  border: 1px solid #b8c5be;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.step-remove-row-btn:hover,
+.add-step-btn:hover {
+  background: #f3f6f4;
+}
+
+.add-step-btn {
+  width: 100%;
+  margin-bottom: 0.5rem;
 }
 
 .quest-row {
