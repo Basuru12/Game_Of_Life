@@ -131,13 +131,6 @@ function countDoneSteps(quest) {
   return count;
 }
 
-function firstOpenStepIndex(quest) {
-  for (let i = 0; i < quest.steps.length; i += 1) {
-    if (!isStepDone(quest.id, quest.steps[i].id)) return i;
-  }
-  return -1;
-}
-
 function stepLabel(step, levelNumber) {
   if (step.kind === "boss") return "BOSS BATTLE";
   return "Level " + levelNumber;
@@ -451,10 +444,8 @@ function renderHeader() {
     "</ul>";
 }
 
-function makeStepRow(quest, step, index, openIndex) {
+function makeStepRow(quest, step, index) {
   const done = isStepDone(quest.id, step.id);
-  const locked = !done && (openIndex === -1 || index > openIndex);
-  const canComplete = !done && index === openIndex;
 
   let levelNumber = 0;
   for (let i = 0; i <= index; i += 1) {
@@ -466,7 +457,6 @@ function makeStepRow(quest, step, index, openIndex) {
   row.className =
     "step-row" +
     (done ? " step-done" : "") +
-    (locked ? " step-locked" : "") +
     (step.kind === "boss" ? " step-boss" : "");
 
   const label = stepLabel(step, levelNumber);
@@ -494,9 +484,6 @@ function makeStepRow(quest, step, index, openIndex) {
   if (done) {
     btn.textContent = "Done";
     btn.disabled = true;
-  } else if (locked) {
-    btn.textContent = "Locked";
-    btn.disabled = true;
   } else {
     btn.textContent = "Complete";
     btn.addEventListener("click", () => completeStep(quest.id, step.id));
@@ -512,7 +499,6 @@ function makePathCard(quest) {
   const tagLabel = category ? category.label : quest.category;
   const tagColor = category ? category.color : "#5c6b7a";
   const doneCount = countDoneSteps(quest);
-  const openIndex = firstOpenStepIndex(quest);
 
   const card = document.createElement("article");
   card.className = "path-card";
@@ -568,7 +554,7 @@ function makePathCard(quest) {
   stepsList.className = "path-steps";
 
   quest.steps.forEach((step, index) => {
-    stepsList.appendChild(makeStepRow(quest, step, index, openIndex));
+    stepsList.appendChild(makeStepRow(quest, step, index));
   });
 
   card.appendChild(stepsList);
@@ -614,11 +600,8 @@ function completeStep(questId, stepId) {
   const quest = allQuests().find((item) => item.id === questId);
   if (!quest) return;
 
-  const openIndex = firstOpenStepIndex(quest);
-  if (openIndex < 0) return;
-
-  const step = quest.steps[openIndex];
-  if (!step || step.id !== stepId) return;
+  const step = quest.steps.find((item) => item.id === stepId);
+  if (!step) return;
   if (isStepDone(questId, stepId)) return;
 
   gainXp(avatar, step.xp);
