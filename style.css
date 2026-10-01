@@ -443,6 +443,35 @@ h2 {
   color: #3d5a4c;
 }
 
+.path-reward {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #8b6914;
+}
+
+.path-ready-to-claim {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #c9a227;
+  border-radius: 10px;
+  background: rgba(255, 250, 235, 0.7);
+}
+
+.quest-claim-btn {
+  padding: 0.4rem 0.7rem;
+  border: none;
+  border-radius: 8px;
+  background: #c9a227;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.quest-claim-btn:hover {
+  background: #a8861a;
+}
+
 .path-steps {
   display: flex;
   flex-direction: column;

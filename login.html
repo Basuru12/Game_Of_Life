@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Life RPG — Supabase check</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <h1>Supabase client check</h1>
+    <p id="status">Loading…</p>
+    <p class="page-intro">
+      Open the browser console (F12). Step 3 will add real login here.
+    </p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="supabase-client.js"></script>
+  <script>
+    const statusEl = document.getElementById("status");
+    const urlOk = SUPABASE_URL && !SUPABASE_URL.includes("YOUR_SUPABASE");
+    const keyOk = SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes("YOUR_SUPABASE");
+
+    if (!urlOk || !keyOk) {
+      statusEl.textContent =
+        "Client created, but config.js still has placeholders. Paste your Project URL and anon key.";
+    } else if (typeof supabaseClient !== "undefined") {
+      statusEl.textContent = "Supabase client is ready.";
+    } else {
+      statusEl.textContent = "Failed to create supabaseClient. Check the console.";
+    }
+  </script>
+</body>
+</html>

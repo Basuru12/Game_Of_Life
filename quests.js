@@ -36,12 +36,17 @@ function clampStepXp(value) {
 function normalizeQuest(quest) {
   if (!quest || typeof quest !== "object") return null;
 
+  const reward = typeof quest.reward === "string" ? quest.reward : "";
+  const rewardClaimed = Boolean(quest.rewardClaimed);
+
   if (Array.isArray(quest.steps) && quest.steps.length > 0) {
     return {
       id: quest.id,
       category: quest.category,
       title: quest.title,
       description: quest.description || "",
+      reward: reward,
+      rewardClaimed: rewardClaimed,
       custom: Boolean(quest.custom),
       steps: quest.steps.map((step, index) => ({
         id: step.id || "step-" + (index + 1),
@@ -58,6 +63,8 @@ function normalizeQuest(quest) {
     category: quest.category,
     title: quest.title,
     description: quest.description || "",
+    reward: reward,
+    rewardClaimed: rewardClaimed,
     custom: Boolean(quest.custom),
     steps: [
       {
@@ -129,6 +136,18 @@ function countDoneSteps(quest) {
     if (isStepDone(quest.id, step.id)) count += 1;
   });
   return count;
+}
+
+function isPathComplete(quest) {
+  return (
+    quest.steps.length > 0 && countDoneSteps(quest) === quest.steps.length
+  );
+}
+
+function shouldHidePath(quest) {
+  if (!isPathComplete(quest)) return false;
+  if (!quest.reward || quest.rewardClaimed) return true;
+  return false;
 }
 
 function stepLabel(step, levelNumber) {
@@ -296,6 +315,7 @@ function clearQuestForm() {
   document.getElementById("quest-cancel-btn").classList.add("hidden");
   document.getElementById("quest-title").value = "";
   document.getElementById("quest-description").value = "";
+  document.getElementById("quest-reward").value = "";
   document.getElementById("quest-category").selectedIndex = 0;
   document.getElementById("add-quest-error").classList.add("hidden");
   fillStepsBuilder(defaultStepDrafts());
@@ -312,6 +332,7 @@ function startEditQuest(questId) {
   document.getElementById("quest-category").value = quest.category;
   document.getElementById("quest-title").value = quest.title;
   document.getElementById("quest-description").value = quest.description || "";
+  document.getElementById("quest-reward").value = quest.reward || "";
   document.getElementById("add-quest-error").classList.add("hidden");
 
   fillStepsBuilder(
@@ -333,6 +354,7 @@ function handleQuestFormSubmit(event) {
   const categoryId = document.getElementById("quest-category").value;
   const title = document.getElementById("quest-title").value.trim();
   const description = document.getElementById("quest-description").value.trim();
+  const reward = document.getElementById("quest-reward").value.trim();
   const errorEl = document.getElementById("add-quest-error");
   const steps = readStepsFromForm();
 
@@ -344,6 +366,12 @@ function handleQuestFormSubmit(event) {
 
   if (!getCategory(categoryId)) {
     errorEl.textContent = "Please choose a valid category.";
+    errorEl.classList.remove("hidden");
+    return;
+  }
+
+  if (!reward) {
+    errorEl.textContent = "Please enter a real-life reward.";
     errorEl.classList.remove("hidden");
     return;
   }
@@ -360,6 +388,8 @@ function handleQuestFormSubmit(event) {
     category: categoryId,
     title: title,
     description: description || "",
+    reward: reward,
+    rewardClaimed: false,
     custom: true,
     steps: steps,
   };
@@ -372,8 +402,11 @@ function handleQuestFormSubmit(event) {
       return;
     }
 
-    // Keep existing step ids when titles match order length so progress can persist
-    const oldSteps = custom[index].steps || [];
+    const old = custom[index];
+    path.rewardClaimed = Boolean(old.rewardClaimed);
+
+    // Keep existing step ids when order aligns so progress can persist
+    const oldSteps = old.steps || [];
     path.steps = steps.map((step, i) => ({
       ...step,
       id: oldSteps[i] ? oldSteps[i].id : step.id,
@@ -499,9 +532,11 @@ function makePathCard(quest) {
   const tagLabel = category ? category.label : quest.category;
   const tagColor = category ? category.color : "#5c6b7a";
   const doneCount = countDoneSteps(quest);
+  const complete = isPathComplete(quest);
+  const canClaim = complete && quest.reward && !quest.rewardClaimed;
 
   const card = document.createElement("article");
-  card.className = "path-card";
+  card.className = "path-card" + (canClaim ? " path-ready-to-claim" : "");
 
   const header = document.createElement("div");
   header.className = "path-header";
@@ -518,8 +553,9 @@ function makePathCard(quest) {
     quest.title +
     "</h3>" +
     "</div>" +
-    (quest.description
-      ? "<p>" + quest.description + "</p>"
+    (quest.description ? "<p>" + quest.description + "</p>" : "") +
+    (quest.reward
+      ? '<p class="path-reward">Reward: ' + quest.reward + "</p>"
       : "") +
     '<p class="path-progress">' +
     doneCount +
@@ -530,6 +566,15 @@ function makePathCard(quest) {
 
   const actions = document.createElement("div");
   actions.className = "quest-actions";
+
+  if (canClaim) {
+    const claimBtn = document.createElement("button");
+    claimBtn.type = "button";
+    claimBtn.className = "quest-claim-btn";
+    claimBtn.textContent = "Claim reward";
+    claimBtn.addEventListener("click", () => claimReward(quest.id));
+    actions.appendChild(claimBtn);
+  }
 
   if (quest.custom) {
     const editBtn = document.createElement("button");
@@ -561,6 +606,22 @@ function makePathCard(quest) {
   return card;
 }
 
+function claimReward(questId) {
+  const custom = loadCustomQuests();
+  const index = custom.findIndex((quest) => quest.id === questId);
+  if (index === -1) return;
+
+  const quest = custom[index];
+  if (!isPathComplete(quest) || !quest.reward || quest.rewardClaimed) return;
+
+  custom[index] = {
+    ...quest,
+    rewardClaimed: true,
+  };
+  saveCustomQuests(custom);
+  renderQuests();
+}
+
 function renderQuests() {
   const list = document.getElementById("quest-list");
   list.innerHTML = "";
@@ -579,7 +640,9 @@ function renderQuests() {
     const rows = document.createElement("div");
     rows.className = "quest-category-list";
 
-    const inCategory = quests.filter((quest) => quest.category === category.id);
+    const inCategory = quests.filter(
+      (quest) => quest.category === category.id && !shouldHidePath(quest)
+    );
     if (inCategory.length === 0) {
       const empty = document.createElement("p");
       empty.className = "category-empty";
