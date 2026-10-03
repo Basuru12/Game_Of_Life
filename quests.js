@@ -1,6 +1,5 @@
 // Quests page — paths with XP steps (uses game.js helpers)
 
-const CUSTOM_QUESTS_KEY = "lifeRpgCustomQuests";
 const MAX_STEP_XP = 120;
 
 const CATEGORIES = [
@@ -77,53 +76,11 @@ function normalizeQuest(quest) {
   };
 }
 
-function loadCustomQuests() {
-  const raw = localStorage.getItem(CUSTOM_QUESTS_KEY);
-  if (!raw) return [];
-
-  try {
-    const list = JSON.parse(raw);
-    if (!Array.isArray(list)) return [];
-
-    let needsSave = false;
-    const normalized = list
-      .map((quest) => {
-        if (!quest || typeof quest !== "object") return null;
-        if (!Array.isArray(quest.steps) || quest.steps.length === 0) {
-          needsSave = true;
-        }
-        return normalizeQuest(quest);
-      })
-      .filter(Boolean);
-
-    if (needsSave) saveCustomQuests(normalized);
-    return normalized;
-  } catch (error) {
-    return [];
-  }
-}
-
-function saveCustomQuests(list) {
-  localStorage.setItem(CUSTOM_QUESTS_KEY, JSON.stringify(list));
-}
+let customQuests = [];
+let doneQuests = {};
 
 function allQuests() {
-  return QUESTS.map(normalizeQuest).filter(Boolean).concat(loadCustomQuests());
-}
-
-function loadDoneQuests() {
-  const raw = localStorage.getItem(QUEST_DONE_KEY);
-  if (!raw) return {};
-
-  try {
-    return JSON.parse(raw);
-  } catch (error) {
-    return {};
-  }
-}
-
-function saveDoneQuests(done) {
-  localStorage.setItem(QUEST_DONE_KEY, JSON.stringify(done));
+  return QUESTS.map(normalizeQuest).filter(Boolean).concat(customQuests);
 }
 
 function isStepDone(questId, stepId) {
@@ -155,10 +112,7 @@ function stepLabel(step, levelNumber) {
   return "Level " + levelNumber;
 }
 
-let doneQuests = {};
-
 function startQuestsPage() {
-  doneQuests = loadDoneQuests();
   fillCategorySelect();
   clearQuestForm();
   renderHeader();
@@ -322,7 +276,7 @@ function clearQuestForm() {
 }
 
 function startEditQuest(questId) {
-  const quest = loadCustomQuests().find((item) => item.id === questId);
+  const quest = customQuests.find((item) => item.id === questId);
   if (!quest) return;
 
   document.getElementById("editing-quest-id").value = quest.id;
@@ -347,7 +301,7 @@ function startEditQuest(questId) {
   document.getElementById("quest-title").focus();
 }
 
-function handleQuestFormSubmit(event) {
+async function handleQuestFormSubmit(event) {
   event.preventDefault();
 
   const editingId = document.getElementById("editing-quest-id").value;
@@ -382,7 +336,6 @@ function handleQuestFormSubmit(event) {
     return;
   }
 
-  const custom = loadCustomQuests();
   const path = {
     id: editingId || "custom-" + Date.now(),
     category: categoryId,
@@ -395,14 +348,14 @@ function handleQuestFormSubmit(event) {
   };
 
   if (editingId) {
-    const index = custom.findIndex((quest) => quest.id === editingId);
+    const index = customQuests.findIndex((quest) => quest.id === editingId);
     if (index === -1) {
       errorEl.textContent = "That path could not be found.";
       errorEl.classList.remove("hidden");
       return;
     }
 
-    const old = custom[index];
+    const old = customQuests[index];
     path.rewardClaimed = Boolean(old.rewardClaimed);
 
     // Keep existing step ids when order aligns so progress can persist
@@ -411,33 +364,48 @@ function handleQuestFormSubmit(event) {
       ...step,
       id: oldSteps[i] ? oldSteps[i].id : step.id,
     }));
-
-    custom[index] = path;
-  } else {
-    custom.push(path);
   }
 
-  saveCustomQuests(custom);
-  clearQuestForm();
-  renderQuests();
+  try {
+    await saveQuestPath(path);
+    const normalized = normalizeQuest(path);
+    if (editingId) {
+      const index = customQuests.findIndex((quest) => quest.id === editingId);
+      customQuests[index] = normalized;
+    } else {
+      customQuests.push(normalized);
+    }
+    clearQuestForm();
+    renderQuests();
+  } catch (error) {
+    console.error(error);
+    errorEl.textContent = error.message || "Could not save path.";
+    errorEl.classList.remove("hidden");
+  }
 }
 
-function removeCustomQuest(questId) {
-  const next = loadCustomQuests().filter((quest) => quest.id !== questId);
-  saveCustomQuests(next);
+async function removeCustomQuest(questId) {
+  try {
+    await deleteQuestPath(questId);
+    await deleteStepCompletionsForPath(questId);
 
-  Object.keys(doneQuests).forEach((key) => {
-    if (key === questId || key.indexOf(questId + "::") === 0) {
-      delete doneQuests[key];
+    customQuests = customQuests.filter((quest) => quest.id !== questId);
+
+    Object.keys(doneQuests).forEach((key) => {
+      if (key === questId || key.indexOf(questId + "::") === 0) {
+        delete doneQuests[key];
+      }
+    });
+
+    if (document.getElementById("editing-quest-id").value === questId) {
+      clearQuestForm();
     }
-  });
-  saveDoneQuests(doneQuests);
 
-  if (document.getElementById("editing-quest-id").value === questId) {
-    clearQuestForm();
+    renderQuests();
+  } catch (error) {
+    console.error(error);
+    alert(error.message || "Could not remove path.");
   }
-
-  renderQuests();
 }
 
 function renderHeader() {
@@ -606,20 +574,26 @@ function makePathCard(quest) {
   return card;
 }
 
-function claimReward(questId) {
-  const custom = loadCustomQuests();
-  const index = custom.findIndex((quest) => quest.id === questId);
+async function claimReward(questId) {
+  const index = customQuests.findIndex((quest) => quest.id === questId);
   if (index === -1) return;
 
-  const quest = custom[index];
+  const quest = customQuests[index];
   if (!isPathComplete(quest) || !quest.reward || quest.rewardClaimed) return;
 
-  custom[index] = {
+  const updated = {
     ...quest,
     rewardClaimed: true,
   };
-  saveCustomQuests(custom);
-  renderQuests();
+
+  try {
+    await saveQuestPath(updated);
+    customQuests[index] = updated;
+    renderQuests();
+  } catch (error) {
+    console.error(error);
+    alert(error.message || "Could not claim reward.");
+  }
 }
 
 function renderQuests() {
@@ -659,7 +633,7 @@ function renderQuests() {
   });
 }
 
-function completeStep(questId, stepId) {
+async function completeStep(questId, stepId) {
   const quest = allQuests().find((item) => item.id === questId);
   if (!quest) return;
 
@@ -667,19 +641,44 @@ function completeStep(questId, stepId) {
   if (!step) return;
   if (isStepDone(questId, stepId)) return;
 
+  const previousXp = avatar.xp;
+  const previousLevel = avatar.level;
   gainXp(avatar, step.xp);
   doneQuests[stepDoneKey(questId, stepId)] = true;
 
-  saveAvatar(avatar);
-  saveDoneQuests(doneQuests);
-  renderHeader();
-  renderQuests();
+  try {
+    await markStepComplete(questId, stepId);
+    await saveAvatar(avatar);
+    renderHeader();
+    renderQuests();
+  } catch (error) {
+    avatar.xp = previousXp;
+    avatar.level = previousLevel;
+    delete doneQuests[stepDoneKey(questId, stepId)];
+    console.error(error);
+    alert(error.message || "Could not save progress.");
+  }
 }
 
-const avatar = loadAvatar();
+let avatar = null;
 
-if (!avatar || !avatar.name) {
-  location.href = "index.html";
-} else {
+async function bootQuestsPage() {
+  await migrateLocalStorageIfNeeded();
+
+  avatar = await loadAvatar();
+  if (!avatar || !avatar.name) {
+    location.href = "index.html";
+    return;
+  }
+
+  const paths = await loadQuestPaths();
+  customQuests = paths.map(normalizeQuest).filter(Boolean);
+  doneQuests = await loadDoneQuests();
+
   startQuestsPage();
 }
+
+bootQuestsPage().catch(function (error) {
+  console.error(error);
+  alert(error.message || "Could not load quests.");
+});

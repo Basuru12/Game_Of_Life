@@ -109,7 +109,7 @@ function updateUI() {
   });
 }
 
-function beginGame() {
+async function beginGame() {
   const nameInput = document.getElementById("name-input");
   const name = nameInput.value.trim();
   const errorEl = document.getElementById("create-error");
@@ -125,13 +125,27 @@ function beginGame() {
   avatar.level = 1;
   avatar.xp = 0;
 
-  clearDoneQuests();
-  saveAvatar(avatar);
-  location.href = "quests.html";
+  try {
+    await clearDoneQuests();
+    await saveAvatar(avatar);
+    location.href = "quests.html";
+  } catch (error) {
+    errorEl.textContent = error.message || "Could not save avatar.";
+    errorEl.classList.remove("hidden");
+  }
 }
 
-buildLookButtons();
-buildSkillRows();
-updateUI();
+async function bootCreatePage() {
+  try {
+    await migrateLocalStorageIfNeeded();
+  } catch (error) {
+    console.error(error);
+  }
 
-document.getElementById("create-btn").addEventListener("click", beginGame);
+  buildLookButtons();
+  buildSkillRows();
+  updateUI();
+  document.getElementById("create-btn").addEventListener("click", beginGame);
+}
+
+bootCreatePage();

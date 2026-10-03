@@ -28,3 +28,13 @@ async function signOut() {
   const { error } = await supabaseClient.auth.signOut();
   if (error) throw error;
 }
+
+// If not signed in, send the user to login.html and return null.
+async function requireAuth() {
+  const session = await getSession();
+  if (!session) {
+    location.href = "login.html";
+    return null;
+  }
+  return session;
+}
