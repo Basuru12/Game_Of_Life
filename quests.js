@@ -127,6 +127,14 @@ function startQuestsPage() {
   document
     .getElementById("add-step-btn")
     .addEventListener("click", () => addStepRow());
+  document.getElementById("signout-btn").addEventListener("click", async () => {
+    try {
+      await signOut();
+      location.href = "login.html";
+    } catch (error) {
+      alert(error.message || "Could not sign out.");
+    }
+  });
 
   const builder = document.getElementById("steps-builder");
   builder.addEventListener("dragover", onStepDragOver);

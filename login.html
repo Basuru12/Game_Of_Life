@@ -33,6 +33,7 @@
   <script src="config.js"></script>
   <script src="supabase-client.js"></script>
   <script src="auth.js"></script>
+  <script src="game.js"></script>
   <script>
     const statusEl = document.getElementById("status");
     const errorEl = document.getElementById("auth-error");
@@ -72,7 +73,7 @@
       const password = document.getElementById("password").value;
       try {
         await signIn(email, password);
-        await refreshStatus();
+        await redirectToAppHome();
       } catch (error) {
         showError(error.message);
       }
@@ -102,7 +103,17 @@
       }
     });
 
-    refreshStatus();
+    getSession()
+      .then(function (session) {
+        if (session && session.user) {
+          return redirectToAppHome();
+        }
+        return refreshStatus();
+      })
+      .catch(function (error) {
+        statusEl.textContent = "Could not read session.";
+        showError(error.message);
+      });
   </script>
 </body>
 </html>

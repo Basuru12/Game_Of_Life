@@ -152,6 +152,11 @@ async function loadAvatar() {
   };
 }
 
+async function redirectToAppHome() {
+  const avatar = await loadAvatar();
+  location.href = avatar && avatar.name ? "quests.html" : "index.html";
+}
+
 function questToRow(quest, userId) {
   return {
     id: quest.id,

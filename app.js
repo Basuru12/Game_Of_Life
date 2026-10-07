@@ -142,6 +142,21 @@ async function bootCreatePage() {
     console.error(error);
   }
 
+  const params = new URLSearchParams(location.search);
+  const forceNew = params.get("new") === "1";
+
+  if (!forceNew) {
+    try {
+      const existing = await loadAvatar();
+      if (existing && existing.name) {
+        location.href = "quests.html";
+        return;
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   buildLookButtons();
   buildSkillRows();
   updateUI();
