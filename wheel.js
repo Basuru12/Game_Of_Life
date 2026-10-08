@@ -31,27 +31,71 @@ function clampWheelScore(value) {
   return score;
 }
 
-function getWheelScore(areaId) {
-  if (Object.prototype.hasOwnProperty.call(wheelScores, areaId)) {
-    return clampWheelScore(wheelScores[areaId]);
+function makeWheelEntry(score, reason, improvements) {
+  return {
+    score: clampWheelScore(score),
+    reason: typeof reason === "string" ? reason : "",
+    improvements: typeof improvements === "string" ? improvements : "",
+  };
+}
+
+function entryFromRaw(value) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return makeWheelEntry(value.score, value.reason, value.improvements);
   }
-  return WHEEL_DEFAULT_SCORE;
+  return makeWheelEntry(value, "", "");
+}
+
+function getWheelEntry(areaId) {
+  if (Object.prototype.hasOwnProperty.call(wheelScores, areaId)) {
+    return entryFromRaw(wheelScores[areaId]);
+  }
+  return makeWheelEntry(WHEEL_DEFAULT_SCORE, "", "");
+}
+
+function getWheelScore(areaId) {
+  return getWheelEntry(areaId).score;
 }
 
 function normalizeWheelScores(raw) {
   const next = {};
   WHEEL_AREAS.forEach((area) => {
-    next[area.id] = getScoreFromRaw(raw, area.id);
+    if (raw && typeof raw === "object" && Object.prototype.hasOwnProperty.call(raw, area.id)) {
+      next[area.id] = entryFromRaw(raw[area.id]);
+    } else {
+      next[area.id] = makeWheelEntry(WHEEL_DEFAULT_SCORE, "", "");
+    }
   });
   return next;
 }
 
-function getScoreFromRaw(raw, areaId) {
-  if (!raw || typeof raw !== "object") return WHEEL_DEFAULT_SCORE;
-  if (!Object.prototype.hasOwnProperty.call(raw, areaId)) {
-    return WHEEL_DEFAULT_SCORE;
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function formatHoverNotes(entry) {
+  const reason = (entry.reason || "").trim();
+  const improvements = (entry.improvements || "").trim();
+  if (!reason && !improvements) return "";
+
+  let html = "";
+  if (reason) {
+    html +=
+      '<p class="wheel-tooltip-block"><strong>Score reason</strong><br />' +
+      escapeHtml(reason) +
+      "</p>";
   }
-  return clampWheelScore(raw[areaId]);
+  if (improvements) {
+    html +=
+      '<p class="wheel-tooltip-block"><strong>Improvements</strong><br />' +
+      escapeHtml(improvements) +
+      "</p>";
+  }
+  return html;
 }
 
 function polarToCartesian(cx, cy, radius, angleDeg) {
@@ -85,23 +129,66 @@ function describeWedge(cx, cy, radius, startAngle, endAngle) {
   ].join(" ");
 }
 
+function hideWheelTooltip() {
+  const tip = document.getElementById("wheel-tooltip");
+  if (!tip) return;
+  tip.classList.add("hidden");
+  tip.innerHTML = "";
+}
+
+function showWheelTooltip(areaId, clientX, clientY) {
+  const tip = document.getElementById("wheel-tooltip");
+  const chart = document.getElementById("wheel-chart");
+  if (!tip || !chart) return;
+
+  const area = WHEEL_AREAS.find((item) => item.id === areaId);
+  if (!area) return;
+
+  const entry = getWheelEntry(areaId);
+  const notesHtml = formatHoverNotes(entry);
+  if (!notesHtml) {
+    hideWheelTooltip();
+    return;
+  }
+
+  tip.innerHTML =
+    '<p class="wheel-tooltip-title">' + escapeHtml(area.label) + "</p>" + notesHtml;
+  tip.classList.remove("hidden");
+
+  const rect = chart.getBoundingClientRect();
+  let left = clientX - rect.left + 12;
+  let top = clientY - rect.top + 12;
+  tip.style.left = left + "px";
+  tip.style.top = top + "px";
+
+  const tipRect = tip.getBoundingClientRect();
+  if (tipRect.right > rect.right) {
+    left = Math.max(8, left - tipRect.width - 24);
+  }
+  if (tipRect.bottom > rect.bottom) {
+    top = Math.max(8, top - tipRect.height - 24);
+  }
+  tip.style.left = left + "px";
+  tip.style.top = top + "px";
+}
+
 function renderWheelChart() {
   const container = document.getElementById("wheel-chart");
+  const tooltip = document.getElementById("wheel-tooltip");
   const size = 360;
   const cx = size / 2;
   const cy = size / 2;
   const outerR = 118;
   const labelR = 148;
   const slice = 360 / WHEEL_AREAS.length;
-  // Start so first slice is centered near top-right like the reference
   const startOffset = -slice / 2;
 
+  let hits = "";
   let wedges = "";
   let rings = "";
   let labels = "";
   let badges = "";
 
-  // Guide rings
   for (let tick = 2; tick <= 10; tick += 2) {
     const r = (tick / WHEEL_MAX) * outerR;
     rings +=
@@ -118,10 +205,18 @@ function renderWheelChart() {
     const startAngle = startOffset + index * slice;
     const endAngle = startAngle + slice;
     const midAngle = startAngle + slice / 2;
-    const score = getWheelScore(area.id);
+    const entry = getWheelEntry(area.id);
+    const score = entry.score;
     const fillR = (score / WHEEL_MAX) * outerR;
     const focused = focusedWheelArea === area.id;
     const wedgeClass = focused ? "wheel-wedge is-focused" : "wheel-wedge";
+
+    hits +=
+      '<path class="wheel-hit" data-area="' +
+      area.id +
+      '" d="' +
+      describeWedge(cx, cy, outerR, startAngle, endAngle) +
+      '" />';
 
     wedges +=
       '<path class="' +
@@ -134,7 +229,6 @@ function renderWheelChart() {
       area.color +
       '" />';
 
-    // Divider to outer rim
     const rim = polarToCartesian(cx, cy, outerR, startAngle);
     wedges +=
       '<line class="wheel-divider" x1="' +
@@ -179,7 +273,6 @@ function renderWheelChart() {
       "</text></g>";
   });
 
-  // Outer circle
   const rimCircle =
     '<circle class="wheel-rim" cx="' +
     cx +
@@ -189,22 +282,40 @@ function renderWheelChart() {
     outerR +
     '" />';
 
-  container.innerHTML =
+  const svgHtml =
     '<svg class="wheel-svg" viewBox="0 0 ' +
     size +
     " " +
     size +
     '" role="img" aria-label="Wheel of Life">' +
     rings +
+    hits +
     wedges +
     rimCircle +
     labels +
     badges +
     "</svg>";
 
+  container.innerHTML = svgHtml;
+  if (tooltip) {
+    container.appendChild(tooltip);
+    hideWheelTooltip();
+  }
+
   container.querySelectorAll("[data-area]").forEach((el) => {
+    const areaId = el.getAttribute("data-area");
     el.addEventListener("click", () => {
-      focusWheelArea(el.getAttribute("data-area"));
+      hideWheelTooltip();
+      focusWheelArea(areaId);
+    });
+    el.addEventListener("mouseenter", (event) => {
+      showWheelTooltip(areaId, event.clientX, event.clientY);
+    });
+    el.addEventListener("mousemove", (event) => {
+      showWheelTooltip(areaId, event.clientX, event.clientY);
+    });
+    el.addEventListener("mouseleave", () => {
+      hideWheelTooltip();
     });
   });
 }
@@ -213,13 +324,16 @@ function focusWheelArea(areaId) {
   const area = WHEEL_AREAS.find((item) => item.id === areaId);
   if (!area) return;
 
+  const entry = getWheelEntry(areaId);
   focusedWheelArea = areaId;
-  draftWheelScore = getWheelScore(areaId);
+  draftWheelScore = entry.score;
 
   const editor = document.getElementById("wheel-editor");
   editor.classList.remove("hidden");
   document.getElementById("wheel-editor-label").textContent = area.label;
   document.getElementById("wheel-score-value").textContent = draftWheelScore;
+  document.getElementById("wheel-reason").value = entry.reason;
+  document.getElementById("wheel-improvements").value = entry.improvements;
   document.getElementById("wheel-editor-error").classList.add("hidden");
 
   renderWheelChart();
@@ -237,7 +351,12 @@ async function saveFocusedWheelScore() {
   if (!focusedWheelArea) return;
 
   const previous = wheelScores[focusedWheelArea];
-  wheelScores[focusedWheelArea] = draftWheelScore;
+  const nextEntry = makeWheelEntry(
+    draftWheelScore,
+    document.getElementById("wheel-reason").value.trim(),
+    document.getElementById("wheel-improvements").value.trim()
+  );
+  wheelScores[focusedWheelArea] = nextEntry;
 
   try {
     await saveWheelScores(wheelScores);

@@ -67,7 +67,9 @@
         <h1>Wheel of Life</h1>
       </header>
       <p class="page-intro">Click a segment to focus that area and set your score (1–10).</p>
-      <div id="wheel-chart" class="wheel-chart"></div>
+      <div id="wheel-chart" class="wheel-chart">
+        <div id="wheel-tooltip" class="wheel-tooltip hidden" role="tooltip"></div>
+      </div>
       <div id="wheel-editor" class="wheel-editor hidden">
         <p id="wheel-editor-label" class="wheel-editor-label"></p>
         <div class="wheel-editor-controls">
@@ -75,6 +77,14 @@
           <strong id="wheel-score-value">5</strong>
           <button type="button" id="wheel-score-plus" aria-label="Increase score">+</button>
         </div>
+        <label class="field">
+          <span>What resulted in the score</span>
+          <textarea id="wheel-reason" rows="3" maxlength="400" placeholder="What led to this score?"></textarea>
+        </label>
+        <label class="field">
+          <span>Improvements I need to make</span>
+          <textarea id="wheel-improvements" rows="3" maxlength="400" placeholder="What will you improve?"></textarea>
+        </label>
         <button type="button" id="wheel-score-save" class="create-btn">Save</button>
         <p id="wheel-editor-error" class="error hidden"></p>
       </div>

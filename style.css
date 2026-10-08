@@ -272,6 +272,7 @@ h2 {
 }
 
 .wheel-chart {
+  position: relative;
   display: flex;
   justify-content: center;
   margin: 0 0 1.25rem;
@@ -282,6 +283,40 @@ h2 {
   height: auto;
   background: #eceae4;
   border-radius: 16px;
+}
+
+.wheel-hit {
+  fill: transparent;
+  cursor: pointer;
+  pointer-events: all;
+}
+
+.wheel-tooltip {
+  position: absolute;
+  z-index: 5;
+  max-width: 220px;
+  padding: 0.65rem 0.75rem;
+  background: #1f2a24;
+  color: #f5f7f5;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  text-align: left;
+  pointer-events: none;
+  box-shadow: 0 6px 18px rgba(20, 30, 24, 0.25);
+}
+
+.wheel-tooltip-title {
+  margin: 0 0 0.4rem;
+  font-weight: 700;
+}
+
+.wheel-tooltip-block {
+  margin: 0 0 0.4rem;
+}
+
+.wheel-tooltip-block:last-child {
+  margin-bottom: 0;
 }
 
 .wheel-guide-ring {
@@ -346,7 +381,7 @@ h2 {
 
 .wheel-editor {
   margin: 0 auto 1.5rem;
-  max-width: 280px;
+  max-width: 360px;
   padding: 1rem 1.1rem;
   background: #fff;
   border: 1px solid #d0ddd6;
@@ -382,6 +417,21 @@ h2 {
 .wheel-editor-controls strong {
   min-width: 2rem;
   font-size: 1.5rem;
+}
+
+.wheel-editor .field {
+  text-align: left;
+  margin-bottom: 0.85rem;
+}
+
+.wheel-editor textarea {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #b8c5be;
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+  box-sizing: border-box;
 }
 
 .wheel-editor .create-btn {
