@@ -229,6 +229,38 @@ h2 {
   font-size: 0.95rem;
 }
 
+.hidden {
+  display: none !important;
+}
+
+.page-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+}
+
+.page-tab {
+  flex: 1;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #b8c5be;
+  border-radius: 10px;
+  background: #f3f7f4;
+  color: #3d4f46;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.page-tab:hover {
+  border-color: #2f6b52;
+}
+
+.page-tab.is-active {
+  background: #2f6b52;
+  border-color: #2f6b52;
+  color: #fff;
+}
+
 .quests-page-header {
   margin: 0 0 1rem;
   padding-bottom: 0.65rem;
@@ -237,6 +269,123 @@ h2 {
 
 .quests-page-header h1 {
   margin: 0;
+}
+
+.wheel-chart {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 1.25rem;
+}
+
+.wheel-svg {
+  width: min(100%, 380px);
+  height: auto;
+  background: #eceae4;
+  border-radius: 16px;
+}
+
+.wheel-guide-ring {
+  fill: none;
+  stroke: #c5c1b6;
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.wheel-rim {
+  fill: none;
+  stroke: #2a2a2a;
+  stroke-width: 2.5;
+}
+
+.wheel-divider {
+  stroke: #2a2a2a;
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+
+.wheel-wedge {
+  cursor: pointer;
+  stroke: #2a2a2a;
+  stroke-width: 1;
+  opacity: 0.92;
+  transition: opacity 0.15s ease;
+}
+
+.wheel-wedge:hover,
+.wheel-wedge.is-focused {
+  opacity: 1;
+  stroke-width: 2.5;
+}
+
+.wheel-label {
+  fill: #1f2a24;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  user-select: none;
+}
+
+.wheel-badge {
+  cursor: pointer;
+}
+
+.wheel-badge circle {
+  fill: #fff;
+  stroke: #2a2a2a;
+  stroke-width: 1.5;
+}
+
+.wheel-badge text {
+  fill: #1f2a24;
+  font-size: 11px;
+  font-weight: 700;
+  pointer-events: none;
+  user-select: none;
+}
+
+.wheel-editor {
+  margin: 0 auto 1.5rem;
+  max-width: 280px;
+  padding: 1rem 1.1rem;
+  background: #fff;
+  border: 1px solid #d0ddd6;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.wheel-editor-label {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.wheel-editor-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.wheel-editor-controls button {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid #1f2a24;
+  border-radius: 8px;
+  background: #f3f7f4;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.wheel-editor-controls strong {
+  min-width: 2rem;
+  font-size: 1.5rem;
+}
+
+.wheel-editor .create-btn {
+  width: 100%;
 }
 
 .add-quest-form {

@@ -2,7 +2,7 @@
 -- Run this once in: Supabase Dashboard → SQL Editor → New query → Run
 -- Does not change your local HTML/JS app yet.
 
--- Profiles: one row per logged-in user (avatar + skills)
+-- Profiles: one row per logged-in user (avatar + skills + wheel scores)
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   name text not null default '',
@@ -10,8 +10,13 @@ create table if not exists public.profiles (
   level int not null default 1,
   xp int not null default 0,
   skills jsonb not null default '{}'::jsonb,
+  wheel jsonb not null default '{}'::jsonb,
   updated_at timestamptz not null default now()
 );
+
+-- If profiles already exists without wheel, run this once:
+-- alter table public.profiles
+--   add column if not exists wheel jsonb not null default '{}'::jsonb;
 
 -- Quest paths: each user's custom paths (steps stored as JSON)
 create table if not exists public.quest_paths (

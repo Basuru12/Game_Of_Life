@@ -157,6 +157,38 @@ async function redirectToAppHome() {
   location.href = avatar && avatar.name ? "quests.html" : "index.html";
 }
 
+async function loadWheelScores() {
+  const session = await getSession();
+  if (!session) return {};
+
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .select("wheel")
+    .eq("id", session.user.id)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data || !data.wheel || typeof data.wheel !== "object") return {};
+  return data.wheel;
+}
+
+async function saveWheelScores(scores) {
+  const session = await getSession();
+  if (!session) {
+    throw new Error("Not signed in.");
+  }
+
+  const { error } = await supabaseClient
+    .from("profiles")
+    .update({
+      wheel: scores,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", session.user.id);
+
+  if (error) throw error;
+}
+
 function questToRow(quest, userId) {
   return {
     id: quest.id,

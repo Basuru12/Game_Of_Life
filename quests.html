@@ -10,50 +10,75 @@
   <main class="app">
     <header id="player-header" class="player-header"></header>
 
-    <header class="quests-page-header">
-      <h1>Quests</h1>
-    </header>
+    <nav class="page-tabs" aria-label="Page sections">
+      <button type="button" data-tab="quests" class="page-tab is-active">Quests</button>
+      <button type="button" data-tab="wheel" class="page-tab">Wheel</button>
+    </nav>
 
-    <p class="page-intro">Build quest paths with steps. Completing a step earns XP.</p>
+    <section id="tab-quests">
+      <header class="quests-page-header">
+        <h1>Quests</h1>
+      </header>
 
-    <form id="add-quest-form" class="add-quest-form">
-      <h2 id="quest-form-title">Add a quest path</h2>
-      <input type="hidden" id="editing-quest-id" value="" />
+      <p class="page-intro">Build quest paths with steps. Completing a step earns XP.</p>
 
-      <label class="field">
-        <span>Category</span>
-        <select id="quest-category"></select>
-      </label>
+      <form id="add-quest-form" class="add-quest-form">
+        <h2 id="quest-form-title">Add a quest path</h2>
+        <input type="hidden" id="editing-quest-id" value="" />
 
-      <label class="field">
-        <span>Path title</span>
-        <input type="text" id="quest-title" placeholder="e.g. Celtic Fiddle Path" maxlength="80" />
-      </label>
+        <label class="field">
+          <span>Category</span>
+          <select id="quest-category"></select>
+        </label>
 
-      <label class="field">
-        <span>Description</span>
-        <input type="text" id="quest-description" placeholder="Optional path summary" maxlength="140" />
-      </label>
+        <label class="field">
+          <span>Path title</span>
+          <input type="text" id="quest-title" placeholder="e.g. Celtic Fiddle Path" maxlength="80" />
+        </label>
 
-      <label class="field">
-        <span>Reward</span>
-        <input type="text" id="quest-reward" placeholder="e.g. KFC chicken, weighing scale" maxlength="80" />
-      </label>
+        <label class="field">
+          <span>Description</span>
+          <input type="text" id="quest-description" placeholder="Optional path summary" maxlength="140" />
+        </label>
 
-      <div class="field">
-        <span>Steps (XP comes from these)</span>
-        <div id="steps-builder" class="steps-builder"></div>
-        <button type="button" id="add-step-btn" class="add-step-btn">Add step</button>
+        <label class="field">
+          <span>Reward</span>
+          <input type="text" id="quest-reward" placeholder="e.g. KFC chicken, weighing scale" maxlength="80" />
+        </label>
+
+        <div class="field">
+          <span>Steps (XP comes from these)</span>
+          <div id="steps-builder" class="steps-builder"></div>
+          <button type="button" id="add-step-btn" class="add-step-btn">Add step</button>
+        </div>
+
+        <div class="quest-form-actions">
+          <button type="submit" id="quest-submit-btn" class="create-btn">Add path</button>
+          <button type="button" id="quest-cancel-btn" class="quest-cancel-btn hidden">Cancel</button>
+        </div>
+        <p id="add-quest-error" class="error hidden"></p>
+      </form>
+
+      <section id="quest-list" class="quest-list"></section>
+    </section>
+
+    <section id="tab-wheel" class="hidden">
+      <header class="quests-page-header">
+        <h1>Wheel of Life</h1>
+      </header>
+      <p class="page-intro">Click a segment to focus that area and set your score (1–10).</p>
+      <div id="wheel-chart" class="wheel-chart"></div>
+      <div id="wheel-editor" class="wheel-editor hidden">
+        <p id="wheel-editor-label" class="wheel-editor-label"></p>
+        <div class="wheel-editor-controls">
+          <button type="button" id="wheel-score-minus" aria-label="Decrease score">−</button>
+          <strong id="wheel-score-value">5</strong>
+          <button type="button" id="wheel-score-plus" aria-label="Increase score">+</button>
+        </div>
+        <button type="button" id="wheel-score-save" class="create-btn">Save</button>
+        <p id="wheel-editor-error" class="error hidden"></p>
       </div>
-
-      <div class="quest-form-actions">
-        <button type="submit" id="quest-submit-btn" class="create-btn">Add path</button>
-        <button type="button" id="quest-cancel-btn" class="quest-cancel-btn hidden">Cancel</button>
-      </div>
-      <p id="add-quest-error" class="error hidden"></p>
-    </form>
-
-    <section id="quest-list" class="quest-list"></section>
+    </section>
 
     <p class="back-link">
       <a href="index.html?new=1">Create a new avatar</a>
@@ -66,6 +91,7 @@
   <script src="supabase-client.js"></script>
   <script src="auth.js"></script>
   <script src="game.js"></script>
+  <script src="wheel.js"></script>
   <script>
     requireAuth().then(function (session) {
       if (!session) return;

@@ -112,6 +112,21 @@ function stepLabel(step, levelNumber) {
   return "Level " + levelNumber;
 }
 
+function switchPageTab(tabId) {
+  document.querySelectorAll(".page-tab").forEach((btn) => {
+    btn.classList.toggle("is-active", btn.getAttribute("data-tab") === tabId);
+  });
+  document.getElementById("tab-quests").classList.toggle("hidden", tabId !== "quests");
+  document.getElementById("tab-wheel").classList.toggle("hidden", tabId !== "wheel");
+
+  if (tabId === "wheel" && typeof bootWheel === "function") {
+    bootWheel().catch(function (error) {
+      console.error(error);
+      alert(error.message || "Could not load wheel.");
+    });
+  }
+}
+
 function startQuestsPage() {
   fillCategorySelect();
   clearQuestForm();
@@ -134,6 +149,12 @@ function startQuestsPage() {
     } catch (error) {
       alert(error.message || "Could not sign out.");
     }
+  });
+
+  document.querySelectorAll(".page-tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      switchPageTab(btn.getAttribute("data-tab"));
+    });
   });
 
   const builder = document.getElementById("steps-builder");
