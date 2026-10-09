@@ -2,18 +2,7 @@
 
 const MAX_STEP_XP = 120;
 
-const CATEGORIES = [
-  { id: "physical", label: "Physical", color: "#c45c26" },
-  { id: "mental", label: "Mental", color: "#3b6ea5" },
-  { id: "fun", label: "Fun", color: "#c9a227" },
-  { id: "work", label: "Work", color: "#4a6b5a" },
-  { id: "adventure", label: "Adventure", color: "#2a8f7a" },
-  { id: "courage", label: "Courage", color: "#b33b3b" },
-  { id: "freedom", label: "Freedom", color: "#6b5b95" },
-  { id: "master", label: "Master", color: "#8b6914" },
-  { id: "gratitude", label: "Gratitude", color: "#5a8f3d" },
-  { id: "legacy", label: "Legacy", color: "#5c6b7a" },
-];
+const CATEGORIES = LIFE_AREAS;
 
 const QUESTS = [];
 
@@ -625,41 +614,56 @@ async function claimReward(questId) {
   }
 }
 
+function renderQuestCategorySection(list, category, inCategory) {
+  const section = document.createElement("section");
+  section.className = "quest-category";
+
+  const heading = document.createElement("h2");
+  heading.className = "quest-category-title";
+  heading.style.color = category.color;
+  heading.textContent = category.label;
+  section.appendChild(heading);
+
+  const rows = document.createElement("div");
+  rows.className = "quest-category-list";
+
+  if (inCategory.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "category-empty";
+    empty.textContent = "No paths yet.";
+    rows.appendChild(empty);
+  } else {
+    inCategory.forEach((quest) => {
+      rows.appendChild(makePathCard(quest));
+    });
+  }
+
+  section.appendChild(rows);
+  list.appendChild(section);
+}
+
 function renderQuests() {
   const list = document.getElementById("quest-list");
   list.innerHTML = "";
   const quests = allQuests();
 
   CATEGORIES.forEach((category) => {
-    const section = document.createElement("section");
-    section.className = "quest-category";
-
-    const heading = document.createElement("h2");
-    heading.className = "quest-category-title";
-    heading.style.color = category.color;
-    heading.textContent = category.label;
-    section.appendChild(heading);
-
-    const rows = document.createElement("div");
-    rows.className = "quest-category-list";
-
     const inCategory = quests.filter(
       (quest) => quest.category === category.id && !shouldHidePath(quest)
     );
-    if (inCategory.length === 0) {
-      const empty = document.createElement("p");
-      empty.className = "category-empty";
-      empty.textContent = "No paths yet.";
-      rows.appendChild(empty);
-    } else {
-      inCategory.forEach((quest) => {
-        rows.appendChild(makePathCard(quest));
-      });
-    }
-
-    section.appendChild(rows);
-    list.appendChild(section);
+    renderQuestCategorySection(list, category, inCategory);
   });
+
+  const otherQuests = quests.filter(
+    (quest) => !getCategory(quest.category) && !shouldHidePath(quest)
+  );
+  if (otherQuests.length > 0) {
+    renderQuestCategorySection(
+      list,
+      { id: "other", label: "Other", color: "#5c6b7a" },
+      otherQuests
+    );
+  }
 }
 
 async function completeStep(questId, stepId) {

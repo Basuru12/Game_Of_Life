@@ -1,17 +1,5 @@
 // Wheel of Life — SVG chart + score editor (uses game.js helpers)
 
-const WHEEL_AREAS = [
-  { id: "romance", label: "Romance", color: "#c44b4b" },
-  { id: "family", label: "Family", color: "#c45a9a" },
-  { id: "friends", label: "Friends", color: "#6aa8c9" },
-  { id: "growth", label: "Growth", color: "#d4653a" },
-  { id: "money", label: "Money", color: "#4caf50" },
-  { id: "mission", label: "Mission", color: "#2f5f9a" },
-  { id: "body", label: "Body", color: "#c47a3a" },
-  { id: "mind", label: "Mind", color: "#d4b83a" },
-  { id: "soul", label: "Soul", color: "#e0a878" },
-];
-
 const WHEEL_DEFAULT_SCORE = 5;
 const WHEEL_MIN = 1;
 const WHEEL_MAX = 10;
@@ -59,7 +47,7 @@ function getWheelScore(areaId) {
 
 function normalizeWheelScores(raw) {
   const next = {};
-  WHEEL_AREAS.forEach((area) => {
+  LIFE_AREAS.forEach((area) => {
     if (raw && typeof raw === "object" && Object.prototype.hasOwnProperty.call(raw, area.id)) {
       next[area.id] = entryFromRaw(raw[area.id]);
     } else {
@@ -141,7 +129,7 @@ function showWheelTooltip(areaId, clientX, clientY) {
   const chart = document.getElementById("wheel-chart");
   if (!tip || !chart) return;
 
-  const area = WHEEL_AREAS.find((item) => item.id === areaId);
+  const area = LIFE_AREAS.find((item) => item.id === areaId);
   if (!area) return;
 
   const entry = getWheelEntry(areaId);
@@ -180,7 +168,7 @@ function renderWheelChart() {
   const cy = size / 2;
   const outerR = 118;
   const labelR = 148;
-  const slice = 360 / WHEEL_AREAS.length;
+  const slice = 360 / LIFE_AREAS.length;
   const startOffset = -slice / 2;
 
   let hits = "";
@@ -201,7 +189,7 @@ function renderWheelChart() {
       '" />';
   }
 
-  WHEEL_AREAS.forEach((area, index) => {
+  LIFE_AREAS.forEach((area, index) => {
     const startAngle = startOffset + index * slice;
     const endAngle = startAngle + slice;
     const midAngle = startAngle + slice / 2;
@@ -321,7 +309,7 @@ function renderWheelChart() {
 }
 
 function focusWheelArea(areaId) {
-  const area = WHEEL_AREAS.find((item) => item.id === areaId);
+  const area = LIFE_AREAS.find((item) => item.id === areaId);
   if (!area) return;
 
   const entry = getWheelEntry(areaId);

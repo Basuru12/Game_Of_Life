@@ -6,6 +6,19 @@ const AVATAR_STORAGE_KEY = "lifeRpgAvatar";
 const CUSTOM_QUESTS_KEY = "lifeRpgCustomQuests";
 const QUEST_DONE_KEY = "lifeRpgQuestDone";
 
+// Wheel of Life segments — also used as quest categories
+const LIFE_AREAS = [
+  { id: "romance", label: "Romance", color: "#c44b4b" },
+  { id: "family", label: "Family", color: "#c45a9a" },
+  { id: "friends", label: "Friends", color: "#6aa8c9" },
+  { id: "growth", label: "Growth", color: "#d4653a" },
+  { id: "money", label: "Money", color: "#4caf50" },
+  { id: "mission", label: "Mission", color: "#2f5f9a" },
+  { id: "body", label: "Body", color: "#c47a3a" },
+  { id: "mind", label: "Mind", color: "#d4b83a" },
+  { id: "soul", label: "Soul", color: "#e0a878" },
+];
+
 const SKILLS = [
   {
     id: "strength",
