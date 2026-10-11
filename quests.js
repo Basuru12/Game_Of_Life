@@ -2,7 +2,16 @@
 
 const MAX_STEP_XP = 120;
 
-const CATEGORIES = LIFE_AREAS;
+const QUEST_TYPE_CATEGORIES = [
+  { id: "fun", label: "Fun Quests", color: "#c9a227" },
+  { id: "adventure", label: "Adventure Quests", color: "#2a8f7a" },
+  { id: "courage", label: "Courage Quests", color: "#b33b3b" },
+  { id: "freedom", label: "Freedom Quests", color: "#6b5b95" },
+  { id: "master", label: "Master Quests", color: "#8b6914" },
+  { id: "legacy", label: "Legacy Quests", color: "#5c6b7a" },
+];
+
+const CATEGORIES = QUEST_TYPE_CATEGORIES.concat(LIFE_AREAS);
 
 const QUESTS = [];
 
