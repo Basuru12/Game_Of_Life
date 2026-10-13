@@ -211,6 +211,7 @@ function questToRow(quest, userId) {
     description: quest.description || "",
     reward: quest.reward || "",
     reward_claimed: Boolean(quest.rewardClaimed),
+    systematic: Boolean(quest.systematic),
     steps: quest.steps || [],
     updated_at: new Date().toISOString(),
   };
@@ -225,6 +226,7 @@ function rowToQuest(row) {
     description: row.description || "",
     reward: row.reward || "",
     rewardClaimed: Boolean(row.reward_claimed),
+    systematic: Boolean(row.systematic),
     custom: true,
     steps: Array.isArray(row.steps) ? row.steps : [],
   };
@@ -240,7 +242,7 @@ async function loadQuestPaths() {
   const userId = await requireUserId();
   const { data, error } = await supabaseClient
     .from("quest_paths")
-    .select("id, category, title, description, reward, reward_claimed, steps")
+    .select("id, category, title, description, reward, reward_claimed, systematic, steps")
     .eq("user_id", userId)
     .order("updated_at", { ascending: true });
 

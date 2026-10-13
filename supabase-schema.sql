@@ -27,10 +27,15 @@ create table if not exists public.quest_paths (
   description text not null default '',
   reward text not null default '',
   reward_claimed boolean not null default false,
+  systematic boolean not null default false,
   steps jsonb not null default '[]'::jsonb,
   updated_at timestamptz not null default now(),
   primary key (user_id, id)
 );
+
+-- If quest_paths already exists without systematic, run this once:
+-- alter table public.quest_paths
+--   add column if not exists systematic boolean not null default false;
 
 -- Step completions: replaces lifeRpgQuestDone keys "pathId::stepId"
 create table if not exists public.step_completions (

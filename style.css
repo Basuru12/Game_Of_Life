@@ -39,6 +39,20 @@ h2 {
   font-weight: 600;
 }
 
+.field-checkbox {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.field-checkbox input {
+  margin-top: 0.2rem;
+}
+
+.field-checkbox > span {
+  font-weight: 500;
+}
+
 #name-input {
   padding: 0.65rem 0.75rem;
   border: 1px solid #b8c5be;
@@ -524,6 +538,10 @@ h2 {
   letter-spacing: 0.02em;
   text-transform: uppercase;
   vertical-align: middle;
+}
+
+.quest-tag-systematic {
+  background: #4a6b5a;
 }
 
 .quest-actions {

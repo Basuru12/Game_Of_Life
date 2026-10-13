@@ -35,6 +35,7 @@ function normalizeQuest(quest) {
 
   const reward = typeof quest.reward === "string" ? quest.reward : "";
   const rewardClaimed = Boolean(quest.rewardClaimed);
+  const systematic = Boolean(quest.systematic);
 
   if (Array.isArray(quest.steps) && quest.steps.length > 0) {
     return {
@@ -44,6 +45,7 @@ function normalizeQuest(quest) {
       description: quest.description || "",
       reward: reward,
       rewardClaimed: rewardClaimed,
+      systematic: systematic,
       custom: Boolean(quest.custom),
       steps: quest.steps.map((step, index) => ({
         id: step.id || "step-" + (index + 1),
@@ -62,6 +64,7 @@ function normalizeQuest(quest) {
     description: quest.description || "",
     reward: reward,
     rewardClaimed: rewardClaimed,
+    systematic: systematic,
     custom: Boolean(quest.custom),
     steps: [
       {
@@ -100,6 +103,7 @@ function isPathComplete(quest) {
 }
 
 function shouldHidePath(quest) {
+  if (quest.systematic) return false;
   if (!isPathComplete(quest)) return false;
   if (!quest.reward || quest.rewardClaimed) return true;
   return false;
@@ -297,6 +301,7 @@ function clearQuestForm() {
   document.getElementById("quest-title").value = "";
   document.getElementById("quest-description").value = "";
   document.getElementById("quest-reward").value = "";
+  document.getElementById("quest-systematic").checked = false;
   document.getElementById("quest-category").selectedIndex = 0;
   document.getElementById("add-quest-error").classList.add("hidden");
   fillStepsBuilder(defaultStepDrafts());
@@ -314,6 +319,7 @@ function startEditQuest(questId) {
   document.getElementById("quest-title").value = quest.title;
   document.getElementById("quest-description").value = quest.description || "";
   document.getElementById("quest-reward").value = quest.reward || "";
+  document.getElementById("quest-systematic").checked = Boolean(quest.systematic);
   document.getElementById("add-quest-error").classList.add("hidden");
 
   fillStepsBuilder(
@@ -336,6 +342,7 @@ async function handleQuestFormSubmit(event) {
   const title = document.getElementById("quest-title").value.trim();
   const description = document.getElementById("quest-description").value.trim();
   const reward = document.getElementById("quest-reward").value.trim();
+  const systematic = document.getElementById("quest-systematic").checked;
   const errorEl = document.getElementById("add-quest-error");
   const steps = readStepsFromForm();
 
@@ -370,6 +377,7 @@ async function handleQuestFormSubmit(event) {
     description: description || "",
     reward: reward,
     rewardClaimed: false,
+    systematic: systematic,
     custom: true,
     steps: steps,
   };
@@ -544,6 +552,9 @@ function makePathCard(quest) {
     '">' +
     tagLabel +
     "</span>" +
+    (quest.systematic
+      ? '<span class="quest-tag quest-tag-systematic">Systematic</span>'
+      : "") +
     "<h3>" +
     quest.title +
     "</h3>" +
@@ -608,14 +619,28 @@ async function claimReward(questId) {
   const quest = customQuests[index];
   if (!isPathComplete(quest) || !quest.reward || quest.rewardClaimed) return;
 
-  const updated = {
-    ...quest,
-    rewardClaimed: true,
-  };
-
   try {
-    await saveQuestPath(updated);
-    customQuests[index] = updated;
+    if (quest.systematic) {
+      await deleteStepCompletionsForPath(questId);
+      const prefix = questId + "::";
+      Object.keys(doneQuests).forEach((key) => {
+        if (key.indexOf(prefix) === 0) delete doneQuests[key];
+      });
+
+      const reset = {
+        ...quest,
+        rewardClaimed: false,
+      };
+      await saveQuestPath(reset);
+      customQuests[index] = reset;
+    } else {
+      const updated = {
+        ...quest,
+        rewardClaimed: true,
+      };
+      await saveQuestPath(updated);
+      customQuests[index] = updated;
+    }
     renderQuests();
   } catch (error) {
     console.error(error);
