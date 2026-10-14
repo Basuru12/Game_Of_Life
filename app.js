@@ -136,12 +136,6 @@ async function beginGame() {
 }
 
 async function bootCreatePage() {
-  try {
-    await migrateLocalStorageIfNeeded();
-  } catch (error) {
-    console.error(error);
-  }
-
   const params = new URLSearchParams(location.search);
   const forceNew = params.get("new") === "1";
 

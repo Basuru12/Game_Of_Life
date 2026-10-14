@@ -729,8 +729,6 @@ async function completeStep(questId, stepId) {
 let avatar = null;
 
 async function bootQuestsPage() {
-  await migrateLocalStorageIfNeeded();
-
   avatar = await loadAvatar();
   if (!avatar || !avatar.name) {
     location.href = "index.html";
