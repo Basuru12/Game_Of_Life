@@ -76,18 +76,22 @@ function makeStartingSkills() {
 }
 
 function makeNewAvatar() {
-  return {
+  const avatar = {
     name: "",
     look: LOOKS[0],
+    lifetimeXp: 0,
     level: 1,
     xp: 0,
     skills: makeStartingSkills(),
   };
+  applyLifetimeXp(avatar);
+  return avatar;
 }
 
 // --- Level / XP ---
 // Budget: ~100 full paths (~340 XP each) ≈ 34k XP to reach level 50.
 // Early levels are cheap; later levels cost more (linear ramp).
+// Source of truth: lifetimeXp. level + xp are derived for the UI.
 const MAX_LEVEL = 50;
 const FULL_PATH_XP = 340;
 const PATHS_TO_MAX = 100;
@@ -97,27 +101,45 @@ function xpToNextLevel(level) {
   return 120 + (level - 1) * 24;
 }
 
-function gainXp(avatar, amount) {
-  if (avatar.level >= MAX_LEVEL) {
-    avatar.level = MAX_LEVEL;
-    avatar.xp = 0;
-    return;
+function xpSpentToReachLevel(level) {
+  let spent = 0;
+  const capped = Math.min(Number(level) || 1, MAX_LEVEL);
+  for (let i = 1; i < capped; i += 1) {
+    spent += xpToNextLevel(i);
   }
+  return spent;
+}
 
-  avatar.xp += amount;
+function lifetimeFromLevelAndXp(level, xp) {
+  const safeLevel =  Math.min(Number(level), MAX_LEVEL);
+  const safeXp = Number(xp);
+  return xpSpentToReachLevel(safeLevel) + safeXp;
+}
 
-  while (
-    avatar.level < MAX_LEVEL &&
-    avatar.xp >= xpToNextLevel(avatar.level)
-  ) {
-    avatar.xp -= xpToNextLevel(avatar.level);
+function applyLifetimeXp(avatar) {
+  let remaining =  Number(avatar.lifetimeXp) ;
+  avatar.lifetimeXp = remaining;
+  avatar.level = 1;
+  avatar.xp = 0;
+
+  while (avatar.level < MAX_LEVEL && remaining >= xpToNextLevel(avatar.level)) {
+    remaining -= xpToNextLevel(avatar.level);
     avatar.level += 1;
   }
 
   if (avatar.level >= MAX_LEVEL) {
     avatar.level = MAX_LEVEL;
     avatar.xp = 0;
+    return;
   }
+
+  avatar.xp = remaining;
+}
+
+function gainXp(avatar, amount) {
+  const delta = Number(amount);
+  avatar.lifetimeXp = (Number(avatar.lifetimeXp)) + delta;
+  applyLifetimeXp(avatar);
 }
 
 // --- Save / load (Supabase profiles) ---
@@ -131,8 +153,7 @@ async function saveAvatar(avatar) {
     id: session.user.id,
     name: avatar.name,
     look: avatar.look,
-    level: avatar.level,
-    xp: avatar.xp,
+    lifetime_xp:Number(avatar.lifetimeXp),
     skills: avatar.skills,
     updated_at: new Date().toISOString(),
   });
@@ -146,23 +167,41 @@ async function loadAvatar() {
 
   const { data, error } = await supabaseClient
     .from("profiles")
-    .select("name, look, level, xp, skills")
+    .select("name, look, lifetime_xp, level, xp, skills")
     .eq("id", session.user.id)
     .maybeSingle();
 
   if (error) throw error;
   if (!data || !data.name) return null;
 
-  return {
+  let lifetimeXp = Number(data.lifetime_xp);
+  const legacyLevel = Number(data.level);
+  const legacyXp = Number(data.xp);
+  let needsBackfill = false;
+
+  if (!lifetimeXp && (legacyLevel > 1 || legacyXp > 0)) {
+    lifetimeXp = lifetimeFromLevelAndXp(legacyLevel, legacyXp);
+    needsBackfill = true;
+  }
+
+  const avatar = {
     name: data.name,
     look: data.look || LOOKS[0],
-    level: data.level || 1,
-    xp: data.xp || 0,
+    lifetimeXp: lifetimeXp,
+    level: 1,
+    xp: 0,
     skills:
       data.skills && typeof data.skills === "object"
         ? data.skills
         : makeStartingSkills(),
   };
+  applyLifetimeXp(avatar);
+
+  if (needsBackfill) {
+    await saveAvatar(avatar);
+  }
+
+  return avatar;
 }
 
 async function redirectToAppHome() {
@@ -368,16 +407,20 @@ async function migrateLocalStorageIfNeeded() {
   if (!profile || !profile.name) {
     const localAvatar = readLocalAvatar();
     if (localAvatar) {
-      await saveAvatar({
+      const lifetimeXp =
+        Number(localAvatar.lifetimeXp) ||
+        lifetimeFromLevelAndXp(localAvatar.level || 1, localAvatar.xp || 0);
+      const migrated = {
         name: localAvatar.name,
         look: localAvatar.look || LOOKS[0],
-        level: localAvatar.level || 1,
-        xp: localAvatar.xp || 0,
+        lifetimeXp: lifetimeXp,
         skills:
           localAvatar.skills && typeof localAvatar.skills === "object"
             ? localAvatar.skills
             : makeStartingSkills(),
-      });
+      };
+      applyLifetimeXp(migrated);
+      await saveAvatar(migrated);
     }
   }
 

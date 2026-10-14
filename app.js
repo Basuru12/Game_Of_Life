@@ -122,8 +122,8 @@ async function beginGame() {
 
   errorEl.classList.add("hidden");
   avatar.name = name;
-  avatar.level = 1;
-  avatar.xp = 0;
+  avatar.lifetimeXp = 0;
+  applyLifetimeXp(avatar);
 
   try {
     await clearDoneQuests();

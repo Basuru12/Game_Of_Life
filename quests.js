@@ -708,8 +708,7 @@ async function completeStep(questId, stepId) {
   if (!step) return;
   if (isStepDone(questId, stepId)) return;
 
-  const previousXp = avatar.xp;
-  const previousLevel = avatar.level;
+  const previousLifetimeXp = avatar.lifetimeXp;
   gainXp(avatar, step.xp);
   doneQuests[stepDoneKey(questId, stepId)] = true;
 
@@ -719,8 +718,8 @@ async function completeStep(questId, stepId) {
     renderHeader();
     renderQuests();
   } catch (error) {
-    avatar.xp = previousXp;
-    avatar.level = previousLevel;
+    avatar.lifetimeXp = previousLifetimeXp;
+    applyLifetimeXp(avatar);
     delete doneQuests[stepDoneKey(questId, stepId)];
     console.error(error);
     alert(error.message || "Could not save progress.");

@@ -9,6 +9,7 @@ create table if not exists public.profiles (
   look text not null default '🙂',
   level int not null default 1,
   xp int not null default 0,
+  lifetime_xp int not null default 0,
   skills jsonb not null default '{}'::jsonb,
   wheel jsonb not null default '{}'::jsonb,
   updated_at timestamptz not null default now()
@@ -17,6 +18,11 @@ create table if not exists public.profiles (
 -- If profiles already exists without wheel, run this once:
 -- alter table public.profiles
 --   add column if not exists wheel jsonb not null default '{}'::jsonb;
+
+-- If profiles already exists without lifetime_xp, run this once:
+-- alter table public.profiles
+--   add column if not exists lifetime_xp int not null default 0;
+-- Note: level and xp are legacy; the app derives them from lifetime_xp.
 
 -- Quest paths: each user's custom paths (steps stored as JSON)
 create table if not exists public.quest_paths (
