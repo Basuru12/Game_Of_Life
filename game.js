@@ -98,21 +98,6 @@ function xpToNextLevel(level) {
   return 120 + (level - 1) * 24;
 }
 
-function xpSpentToReachLevel(level) {
-  let spent = 0;
-  const capped = Math.min(Number(level) || 1, MAX_LEVEL);
-  for (let i = 1; i < capped; i += 1) {
-    spent += xpToNextLevel(i);
-  }
-  return spent;
-}
-
-function lifetimeFromLevelAndXp(level, xp) {
-  const safeLevel =  Math.min(Number(level), MAX_LEVEL);
-  const safeXp = Number(xp);
-  return xpSpentToReachLevel(safeLevel) + safeXp;
-}
-
 function applyLifetimeXp(avatar) {
   let remaining =  Number(avatar.lifetimeXp) ;
   avatar.lifetimeXp = remaining;
@@ -164,27 +149,17 @@ async function loadAvatar() {
 
   const { data, error } = await supabaseClient
     .from("profiles")
-    .select("name, look, lifetime_xp, level, xp, skills")
+    .select("name, look, lifetime_xp, skills")
     .eq("id", session.user.id)
     .maybeSingle();
 
   if (error) throw error;
   if (!data || !data.name) return null;
 
-  let lifetimeXp = Number(data.lifetime_xp);
-  const legacyLevel = Number(data.level);
-  const legacyXp = Number(data.xp);
-  let needsBackfill = false;
-
-  if (!lifetimeXp && (legacyLevel > 1 || legacyXp > 0)) {
-    lifetimeXp = lifetimeFromLevelAndXp(legacyLevel, legacyXp);
-    needsBackfill = true;
-  }
-
   const avatar = {
     name: data.name,
     look: data.look || LOOKS[0],
-    lifetimeXp: lifetimeXp,
+    lifetimeXp: Number(data.lifetime_xp) || 0,
     level: 1,
     xp: 0,
     skills:
@@ -193,10 +168,6 @@ async function loadAvatar() {
         : makeStartingSkills(),
   };
   applyLifetimeXp(avatar);
-
-  if (needsBackfill) {
-    await saveAvatar(avatar);
-  }
 
   return avatar;
 }
