@@ -1,6 +1,11 @@
--- Life RPG — Supabase schema (Step 1)
--- Run this once in: Supabase Dashboard → SQL Editor → New query → Run
--- Does not change your local HTML/JS app yet.
+-- Life RPG — Supabase schema (reference only)
+--
+-- Do NOT run this in the Dashboard SQL Editor for routine changes.
+-- Schema is managed by migrations under supabase/migrations/.
+--
+-- New change:  npx supabase migration new describe_your_change
+-- Apply:       npx supabase db push
+-- Details:     see supabase/MIGRATIONS.md
 
 -- Profiles: one row per logged-in user (avatar + skills + wheel scores)
 create table if not exists public.profiles (
@@ -14,15 +19,6 @@ create table if not exists public.profiles (
   wheel jsonb not null default '{}'::jsonb,
   updated_at timestamptz not null default now()
 );
-
--- If profiles already exists without wheel, run this once:
--- alter table public.profiles
---   add column if not exists wheel jsonb not null default '{}'::jsonb;
-
--- If profiles already exists without lifetime_xp, run this once:
--- alter table public.profiles
---   add column if not exists lifetime_xp int not null default 0;
--- Note: level and xp are legacy; the app derives them from lifetime_xp.
 
 -- Quest paths: each user's custom paths (steps stored as JSON)
 create table if not exists public.quest_paths (
@@ -38,10 +34,6 @@ create table if not exists public.quest_paths (
   updated_at timestamptz not null default now(),
   primary key (user_id, id)
 );
-
--- If quest_paths already exists without systematic, run this once:
--- alter table public.quest_paths
---   add column if not exists systematic boolean not null default false;
 
 -- Step completions: replaces lifeRpgQuestDone keys "pathId::stepId"
 create table if not exists public.step_completions (
