@@ -12,8 +12,6 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   name text not null default '',
   look text not null default '🙂',
-  level int not null default 1,
-  xp int not null default 0,
   lifetime_xp int not null default 0,
   skills jsonb not null default '{}'::jsonb,
   wheel jsonb not null default '{}'::jsonb,
