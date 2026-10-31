@@ -77,6 +77,15 @@ export const QUEST_TYPE_CATEGORIES: CategoryDef[] = [
 
 export const CATEGORIES: CategoryDef[] = QUEST_TYPE_CATEGORIES.concat(LIFE_AREAS);
 
+/**
+ * Looks up a category definition by id from CATEGORIES.
+ * @param id - Category id (quest type or life area).
+ * @returns The matching CategoryDef, or undefined if not found.
+ */
+export function getCategory(id: string): CategoryDef | undefined {
+  return CATEGORIES.find((category) => category.id === id);
+}
+
 export const MAX_STEP_XP = 120;
 
 export const WHEEL_DEFAULT_SCORE = 5;
