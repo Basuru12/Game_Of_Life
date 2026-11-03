@@ -105,12 +105,12 @@ interface TooltipState {
 }
 
 export function WheelPanel() {
-  const [wheelScores, setWheelScores] = useState<WheelScores | null>(null);
-  const [focusedWheelArea, setFocusedWheelArea] = useState<string | null>(null);
-  const [draftWheelScore, setDraftWheelScore] = useState(WHEEL_DEFAULT_SCORE);
-  const [reason, setReason] = useState("");
-  const [improvements, setImprovements] = useState("");
-  const [error, setError] = useState("");
+  const [areaScores, setAreaScores] = useState<WheelScores | null>(null);
+  const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
+  const [editorScore, setEditorScore] = useState(WHEEL_DEFAULT_SCORE);
+  const [editorReason, setEditorReason] = useState("");
+  const [editorImprovements, setEditorImprovements] = useState("");
+  const [saveError, setSaveError] = useState("");
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [loadError, setLoadError] = useState("");
 
@@ -118,7 +118,7 @@ export function WheelPanel() {
     let cancelled = false;
     loadWheelScores()
       .then((raw) => {
-        if (!cancelled) setWheelScores(normalizeWheelScores(raw));
+        if (!cancelled) setAreaScores(normalizeWheelScores(raw));
       })
       .catch((err) => {
         console.error(err);
@@ -133,54 +133,58 @@ export function WheelPanel() {
 
   const getWheelEntry = useCallback(
     (areaId: string): WheelEntry => {
-      if (wheelScores && Object.prototype.hasOwnProperty.call(wheelScores, areaId)) {
-        return entryFromRaw(wheelScores[areaId]);
+      if (areaScores && Object.prototype.hasOwnProperty.call(areaScores, areaId)) {
+        return entryFromRaw(areaScores[areaId]);
       }
       return makeWheelEntry(WHEEL_DEFAULT_SCORE, "", "");
     },
-    [wheelScores]
+    [areaScores]
   );
 
-  function focusWheelArea(areaId: string) {
+  function selectArea(areaId: string) {
     const area = LIFE_AREAS.find((item) => item.id === areaId);
     if (!area) return;
     const entry = getWheelEntry(areaId);
-    setFocusedWheelArea(areaId);
-    setDraftWheelScore(entry.score);
-    setReason(entry.reason);
-    setImprovements(entry.improvements);
-    setError("");
+    setSelectedAreaId(areaId);
+    setEditorScore(entry.score);
+    setEditorReason(entry.reason);
+    setEditorImprovements(entry.improvements);
+    setSaveError("");
     setTooltip(null);
   }
 
-  async function saveFocusedWheelScore() {
-    if (!focusedWheelArea || !wheelScores) return;
-    setError("");
+  async function saveSelectedAreaScore() {
+    if (!selectedAreaId || !areaScores) return;
+    setSaveError("");
 
-    const previous = wheelScores[focusedWheelArea];
-    const nextEntry = makeWheelEntry(draftWheelScore, reason.trim(), improvements.trim());
-    const nextScores = { ...wheelScores, [focusedWheelArea]: nextEntry };
-    setWheelScores(nextScores);
+    const previous = areaScores[selectedAreaId];
+    const nextEntry = makeWheelEntry(
+      editorScore,
+      editorReason.trim(),
+      editorImprovements.trim()
+    );
+    const nextScores = { ...areaScores, [selectedAreaId]: nextEntry };
+    setAreaScores(nextScores);
 
     try {
       await saveWheelScores(nextScores);
     } catch (err) {
-      setWheelScores((prev) => {
+      setAreaScores((prev) => {
         if (!prev) return prev;
         const rollback = { ...prev };
         if (previous === undefined) {
-          delete rollback[focusedWheelArea];
+          delete rollback[selectedAreaId];
         } else {
-          rollback[focusedWheelArea] = previous;
+          rollback[selectedAreaId] = previous;
         }
         return rollback;
       });
-      setError(err instanceof Error ? err.message : "Could not save score.");
+      setSaveError(err instanceof Error ? err.message : "Could not save score.");
     }
   }
 
   const chart = useMemo(() => {
-    if (!wheelScores) return null;
+    if (!areaScores) return null;
 
     const size = 360;
     const cx = size / 2;
@@ -216,8 +220,8 @@ export function WheelPanel() {
       const entry = getWheelEntry(area.id);
       const score = entry.score;
       const fillR = (score / WHEEL_MAX) * outerR;
-      const focused = focusedWheelArea === area.id;
-      const wedgeClass = focused ? "wheel-wedge is-focused" : "wheel-wedge";
+      const selected = selectedAreaId === area.id;
+      const wedgeClass = selected ? "wheel-wedge is-focused" : "wheel-wedge";
 
       hits.push(
         <path
@@ -225,7 +229,7 @@ export function WheelPanel() {
           className="wheel-hit"
           data-area={area.id}
           d={describeWedge(cx, cy, outerR, startAngle, endAngle)}
-          onClick={() => focusWheelArea(area.id)}
+          onClick={() => selectArea(area.id)}
           onMouseEnter={(e) => showTooltip(area.id, e)}
           onMouseMove={(e) => showTooltip(area.id, e)}
           onMouseLeave={() => setTooltip(null)}
@@ -239,7 +243,7 @@ export function WheelPanel() {
           data-area={area.id}
           d={describeWedge(cx, cy, fillR, startAngle, endAngle)}
           fill={area.color}
-          onClick={() => focusWheelArea(area.id)}
+          onClick={() => selectArea(area.id)}
           onMouseEnter={(e) => showTooltip(area.id, e)}
           onMouseMove={(e) => showTooltip(area.id, e)}
           onMouseLeave={() => setTooltip(null)}
@@ -268,7 +272,7 @@ export function WheelPanel() {
           y={labelPos.y}
           textAnchor="middle"
           dominantBaseline="middle"
-          onClick={() => focusWheelArea(area.id)}
+          onClick={() => selectArea(area.id)}
           onMouseEnter={(e) => showTooltip(area.id, e)}
           onMouseMove={(e) => showTooltip(area.id, e)}
           onMouseLeave={() => setTooltip(null)}
@@ -284,7 +288,7 @@ export function WheelPanel() {
           key={"badge-" + area.id}
           className="wheel-badge"
           data-area={area.id}
-          onClick={() => focusWheelArea(area.id)}
+          onClick={() => selectArea(area.id)}
           onMouseEnter={(e) => showTooltip(area.id, e)}
           onMouseMove={(e) => showTooltip(area.id, e)}
           onMouseLeave={() => setTooltip(null)}
@@ -335,7 +339,7 @@ export function WheelPanel() {
         {badges}
       </svg>
     );
-  }, [wheelScores, focusedWheelArea, getWheelEntry]);
+  }, [areaScores, selectedAreaId, getWheelEntry]);
 
   const tooltipContent = useMemo(() => {
     if (!tooltip) return null;
@@ -375,11 +379,11 @@ export function WheelPanel() {
     return <p className="error">{loadError}</p>;
   }
 
-  if (!wheelScores) {
+  if (!areaScores) {
     return <p className="page-intro">Loading wheel…</p>;
   }
 
-  const focusedArea = LIFE_AREAS.find((item) => item.id === focusedWheelArea);
+  const selectedArea = LIFE_AREAS.find((item) => item.id === selectedAreaId);
 
   return (
     <>
@@ -393,25 +397,25 @@ export function WheelPanel() {
         {chart}
         {tooltipContent}
       </div>
-      {focusedArea ? (
+      {selectedArea ? (
         <div className="wheel-editor">
-          <p className="wheel-editor-label">{focusedArea.label}</p>
+          <p className="wheel-editor-label">{selectedArea.label}</p>
           <div className="wheel-editor-controls">
             <button
               type="button"
               aria-label="Decrease score"
               onClick={() =>
-                setDraftWheelScore((s) => clampWheelScore(s - 1))
+                setEditorScore((s) => clampWheelScore(s - 1))
               }
             >
               −
             </button>
-            <strong>{draftWheelScore}</strong>
+            <strong>{editorScore}</strong>
             <button
               type="button"
               aria-label="Increase score"
               onClick={() =>
-                setDraftWheelScore((s) => clampWheelScore(s + 1))
+                setEditorScore((s) => clampWheelScore(s + 1))
               }
             >
               +
@@ -423,8 +427,8 @@ export function WheelPanel() {
               rows={3}
               maxLength={400}
               placeholder="What led to this score?"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
+              value={editorReason}
+              onChange={(e) => setEditorReason(e.target.value)}
             />
           </label>
           <label className="field">
@@ -433,18 +437,18 @@ export function WheelPanel() {
               rows={3}
               maxLength={400}
               placeholder="What will you improve?"
-              value={improvements}
-              onChange={(e) => setImprovements(e.target.value)}
+              value={editorImprovements}
+              onChange={(e) => setEditorImprovements(e.target.value)}
             />
           </label>
           <button
             type="button"
             className="create-btn"
-            onClick={saveFocusedWheelScore}
+            onClick={saveSelectedAreaScore}
           >
             Save
           </button>
-          {error ? <p className="error">{error}</p> : null}
+          {saveError ? <p className="error">{saveError}</p> : null}
         </div>
       ) : null}
     </>
