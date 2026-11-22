@@ -78,6 +78,21 @@ export const QUEST_TYPE_CATEGORIES: CategoryDef[] = [
 export const CATEGORIES: CategoryDef[] = QUEST_TYPE_CATEGORIES.concat(LIFE_AREAS);
 
 /**
+ * Returns the id of the first category, used as the quest form default.
+ * @returns The first category id.
+ * @throws If CATEGORIES is empty, so a missing list is not replaced with a fake id.
+ */
+export function requireDefaultCategoryId(): string {
+  const id = CATEGORIES[0]?.id;
+  if (!id) {
+    throw new Error("CATEGORIES is empty; a default quest category is required.");
+  }
+  return id;
+}
+
+export const DEFAULT_CATEGORY_ID = requireDefaultCategoryId();
+
+/**
  * Looks up a category definition by id from CATEGORIES.
  * @param id - Category id (quest type or life area).
  * @returns The matching CategoryDef, or undefined if not found.
